@@ -4,59 +4,51 @@ from bs4 import BeautifulSoup
 
 app = FastAPI(title="Ism ma'nosi API")
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0"
-}
-
-BASE = "https://ismlar.com"
+HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
-def get_ism_link(name: str):
-    url = f"{BASE}/uz/search/{name}"
-    r = requests.get(url, headers=HEADERS, timeout=10)
+def ism_manosi(ism: str):
+    ism = ism.strip().capitalize()
+    url = f"https://ismlar.com/name/{ism}"
 
-    if r.status_code != 200:
+    try:
+        res = requests.get(url, headers=HEADERS, timeout=10)
+        if res.status_code != 200:
+            return None
+
+        soup = BeautifulSoup(res.text, "html.parser")
+
+        h1 = soup.find("h1")
+        if not h1:
+            return None
+
+        p = h1.find_next("p")
+        if not p:
+            return None
+
+        return p.get_text(strip=True)
+
+    except Exception:
         return None
 
-    soup = BeautifulSoup(r.text, "html.parser")
 
-    # 🔎 qidiruv natijasidagi birinchi ism linki
-    a = soup.select_one('a[href^="/uz/name/"]')
-    if not a:
-        return None
-
-    return BASE + a["href"]
-
-
-def get_ism_meaning(link: str):
-    r = requests.get(link, headers=HEADERS, timeout=10)
-    if r.status_code != 200:
-        return None
-
-    soup = BeautifulSoup(r.text, "html.parser")
-
-    # ism sahifasidagi birinchi paragraf
-    p = soup.select_one("article p")
-    if not p:
-        return None
-
-    return p.get_text(strip=True)
+@app.get("/")
+def home():
+    return {
+        "message": "Ism ma'nosi API ishlayapti 🚀",
+        "example": "/ism?name=Amirxan"
+    }
 
 
 @app.get("/ism")
-def ism_manosi(name: str):
-    slug = name.lower().strip()
+def get_ism(name: str):
+    manosi = ism_manosi(name)
 
-    link = get_ism_link(slug)
-    if not link:
-        raise HTTPException(404, detail="Ism topilmadi")
-
-    meaning = get_ism_meaning(link)
-    if not meaning:
-        raise HTTPException(404, detail="Ism ma'nosi topilmadi")
+    if not manosi:
+        raise HTTPException(status_code=404, detail="Ism topilmadi")
 
     return {
         "ism": name.capitalize(),
-        "manosi": meaning,
+        "manosi": manosi,
         "manba": "ismlar.com"
     }
