@@ -48,7 +48,7 @@ def get_ism(name: str):
         raise HTTPException(status_code=404, detail="Ism topilmadi")
 
     return {
-        "ism": name.capitalize(),
-        "manosi": manosi,
-        "manba": "ismlar.com"
+        "Ism": name.capitalize(),
+        "Manosi": manosi,
+        "Dasturchi": "ismlar.com"
     }
