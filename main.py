@@ -8,37 +8,31 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
 
-@app.get("/")
-def home():
-    return {
-        "message": "Ism ma'nosi API ishlayapti 🚀",
-        "example": "/ism?name=Ali"
-    }
-
 @app.get("/ism")
 def ism_manosi(name: str):
-    url = f"https://ismlar.com/search?name={name}"
+    url = f"https://ismlar.com/uz/search/{name.lower()}"
 
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=10)
-    except:
-        raise HTTPException(500, detail="Ismlar.com bilan aloqa yo‘q")
-
+    r = requests.get(url, headers=HEADERS, timeout=10)
     if r.status_code != 200:
-        raise HTTPException(500, detail="Saytdan noto‘g‘ri javob")
+        raise HTTPException(500, detail="Ismlar.com ochilmadi")
 
     soup = BeautifulSoup(r.text, "html.parser")
 
-    # ⚠️ selector taxminiy — sayt o‘zgarsa moslanadi
-    text_blocks = soup.find_all("p")
+    # 🔍 faqat asosiy kontentdan qidiramiz
+    content = soup.find("div", class_="content")
 
-    if not text_blocks:
+    if not content:
         raise HTTPException(404, detail="Ism topilmadi")
 
-    meaning = text_blocks[0].get_text(strip=True)
+    paragraphs = content.find_all("p")
+
+    if not paragraphs:
+        raise HTTPException(404, detail="Ma'no topilmadi")
+
+    meaning = paragraphs[0].get_text(strip=True)
 
     return {
-        "ism": name,
+        "ism": name.capitalize(),
         "manosi": meaning,
-        "dasturchi": "Amirxon Ashiraliyev"
+        "Dasturchi": "Amirxon Ashiraliyev"
     }
