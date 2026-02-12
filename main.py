@@ -39,7 +39,7 @@ def ism_manosi(ism: str):
 def home():
     return {
         "status": "API ishlayapti",
-        "example": "/ism?name=Ali"
+        "masalan": "/ism?name=Ali"
     }
 
 
@@ -51,7 +51,7 @@ def get_ism(name: str):
         raise HTTPException(status_code=404, detail="Ism topilmadi")
 
     return {
-        "ism": name.capitalize(),
-        "manosi": manosi,
-        "manba": "ismlar.com"
+        "Ism": name.capitalize(),
+        "Manosi": manosi,
+        "Dasturchi Tg: @xyperh": ""
     }
